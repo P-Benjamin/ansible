@@ -1,0 +1,55 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for grafana
+- name : Install required packages
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - software-properties-common
+      - wget
+      - acl
+    state: present
+
+# create folder
+
+- name: Create  folder /etc/apt/keyrings
+  ansible.builtin.file:
+   path: /etc/apt/keyrings
+   recurse: true
+
+# 3. get -q 0 - https://apt.grafana.com/gpg.key | gpg --dearmor| sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+
+- name: Add Grafana APT key 
+  ansible.builtin.apt_key:
+    url: https://packages.grafana.com/gpg.key
+    keyring: /etc/apt/keyrings/grafana.gpg
+
+#echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://packages.grafana.com/oss/deb stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+- name: Add specified repository into sources list
+  ansible.builtin.apt_repository:
+    repo: deb [signed-by=/etc/apt/keyrings/grafana.gpg] https:apt.grafana.com stable main
+    state: present
+  
+- name: Update apt cache
+  ansible.builtin.apt:
+    name: "*"
+    state: latest
+    cache_valid_time: 3600
+
+  #sudo apt install grafana 
+- name: Install Grafana on server
+  ansible.builtin.apt:
+    name: grafana
+    state: latest
+
+  # sudo systemctl deamon-reload
+
+- name : Reload deamon
+  ansible.builtin.systemd_service:
+    name: grafana-server
+    daemon_reload: true
+    state: started
+
+- name: Display how to connect to the Grafana server instance
+  ansible.builtin.debug:
+    msg: "Connect at http://{{external_ip}}:3000 "
