@@ -1,0 +1,127 @@
+---
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - unzip
+      - tar
+      - gzip
+      - bzip2
+    state: present
+
+- name: Create /etc/loki directory
+  ansible.builtin.file:
+    path: /etc/loki
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Download Loki
+  ansible.builtin.get_url:
+    url: https://github.com/grafana/loki/releases/download/v2.9.7/loki-linux-amd64.zip
+    dest: /tmp/loki.zip
+
+- name: Unzip Loki
+  ansible.builtin.unarchive:
+    src: /tmp/loki.zip
+    dest: /usr/local/bin/
+    remote_src: yes
+
+- name: Make Loki executable
+  ansible.builtin.file:
+    path: /usr/local/bin/loki-linux-amd64
+    mode: '0755'
+
+- name: Create Loki data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /tmp/loki/index
+    - /tmp/loki/cache
+    - /tmp/loki/chunks
+    - /tmp/loki/compactor
+
+- name: Create Loki config file
+  ansible.builtin.copy:
+    dest: /etc/loki/loki-config.yaml
+    content: |
+      auth_enabled: false
+
+      server:
+        http_listen_port: 3100
+        grpc_listen_port: 9096
+
+      ingester:
+        lifecycler:
+          address: 127.0.0.1
+          ring:
+            kvstore:
+              store: inmemory
+            replication_factor: 1
+        chunk_idle_period: 5m
+        chunk_retain_period: 30s
+        max_transfer_retries: 0
+
+      schema_config:
+        configs:
+          - from: 2020-10-24
+            store: boltdb-shipper
+            object_store: filesystem
+            schema: v11
+            index:
+              prefix: index_
+              period: 24h
+
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /tmp/loki/index
+          cache_location: /tmp/loki/cache
+          shared_store: filesystem
+        filesystem:
+          directory: /tmp/loki/chunks
+
+      compactor:
+        working_directory: /tmp/loki/compactor
+        shared_store: filesystem
+
+      limits_config:
+        enforce_metric_name: false
+        reject_old_samples: true
+        reject_old_samples_max_age: 168h
+
+      chunk_store_config:
+        max_look_back_period: 0s
+
+      table_manager:
+        retention_deletes_enabled: false
+        retention_period: 0s
+    mode: '0644'
+
+- name: Create Loki service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/loki.service
+    content: |
+      [Unit]
+      Description=Loki
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/loki-linux-amd64 -config.file=/etc/loki/loki-config.yaml
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Start Loki
+  ansible.builtin.systemd:
+    name: loki
+    enabled: yes
+    state: started

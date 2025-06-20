@@ -1,6 +1,9 @@
-- name: Install Grafana on remote servers
+- name: Install Grafana, Prometheus, Loki, and Promtail on remote servers
   hosts: all
   become: true
   gather_facts: false
   roles:
     - grafana
+    - prometheus
+    - loki
+    - promtail
