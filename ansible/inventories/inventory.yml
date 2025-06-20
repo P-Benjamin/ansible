@@ -1,7 +1,0 @@
-local:
-  hosts:
-    local:
-  vars:
-    ansible_connection: local
-    ansible_user : benjamin
-    external_ip: 34.245.201.108

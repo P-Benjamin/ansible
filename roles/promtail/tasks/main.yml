@@ -26,6 +26,14 @@
     path: /usr/local/bin/promtail-linux-amd64
     mode: '0755'
 
+- name: Ensure /etc/promtail directory exists
+  file:
+    path: /etc/promtail
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Create Promtail config
   ansible.builtin.copy:
     dest: /etc/promtail/promtail-config.yaml

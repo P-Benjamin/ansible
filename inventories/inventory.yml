@@ -1,0 +1,13 @@
+local:
+  hosts:
+    local:
+  vars:
+    ansible_connection: local
+    ansible_user: benjamin
+    external_ip: 40.66.54.13
+
+remote:
+  hosts:
+    benjamin:
+      ansible_host: 40.66.54.13
+      ansible_user: benjamin
