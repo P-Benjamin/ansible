@@ -1,3 +1,10 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for loki
+- name: Restart loki
+  listen: "restart loki"
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: loki.service
+    state: restarted
+    enabled: true

@@ -1,3 +1,12 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for prometheus
+- name: restart_prometheus
+  systemd:
+    name: prometheus
+    state: restarted
+
+- name: reload_prometheus
+  systemd:
+    name: prometheus
+    state: reloaded
