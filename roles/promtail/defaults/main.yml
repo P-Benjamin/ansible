@@ -1,3 +1,16 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # defaults file for promtail
+
+promtail_version: "2.9.7"
+promtail_bin_path: "/usr/local/bin/promtail-linux-amd64"
+promtail_config_dir: "/etc/promtail"
+promtail_config_file: "{{ promtail_config_dir }}/promtail-config.yaml"
+promtail_service_file: "/etc/systemd/system/promtail.service"
+promtail_http_port: 9080
+promtail_grpc_port: 0
+promtail_positions_file: "/tmp/positions.yaml"
+promtail_loki_url: "http://localhost:3100/loki/api/v1/push"
+promtail_job_name: "system"
+promtail_job_label: "varlogs"
+promtail_log_path: "/var/log/*log"
